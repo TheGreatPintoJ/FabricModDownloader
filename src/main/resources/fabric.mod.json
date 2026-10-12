@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "id": "fabricmoddownloader",
+  "version": "${version}",
+  "name": "FabricModDownloader",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "All-Rights-Reserved",
+  "icon": "assets/fabricmoddownloader/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "fabric-datagen": [
+      "me.pintoadmin.fabricmoddownloader.client.FabricmoddownloaderDataGenerator"
+    ],
+    "client": [
+      "me.pintoadmin.fabricmoddownloader.client.FabricmoddownloaderClient"
+    ],
+    "main": [
+      "me.pintoadmin.fabricmoddownloader.Fabricmoddownloader"
+    ]
+  },
+  "mixins": [
+    "fabricmoddownloader.mixins.json",
+    {
+      "config": "fabricmoddownloader.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}
