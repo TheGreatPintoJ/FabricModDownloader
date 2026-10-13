@@ -18,9 +18,8 @@ public class MixinDisconnectScreen {
         String message = this.details.reason().getString().toLowerCase();
 
         if (message.contains("registry") || message.contains("mismatched mod") || message.contains("unknown to this client")) {
-//            System.out.println("Intercepted Mod/Registry Mismatch Kick! Reason given: " + message);
-            FabricmoddownloaderClient.openDownloadGUI(message);
-            ci.cancel();
+            FabricmoddownloaderClient.getInstance().parseReason(message);
+            FabricmoddownloaderClient.getInstance().openDownloadGUI(message);
         }
     }
 }

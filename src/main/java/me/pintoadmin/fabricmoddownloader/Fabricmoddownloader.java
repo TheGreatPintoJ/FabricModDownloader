@@ -21,7 +21,7 @@ public class Fabricmoddownloader implements ModInitializer {
 
     private void onServerReady(MinecraftServer server) {
         configManager = new ConfigManager();
-        modManager = new ModManager();
+        modManager = ModManager.getInstance();
         new RequestHandler(modManager).initServer();
         configManager.loadMods(modManager.getAllMods());
     }
