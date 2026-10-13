@@ -66,7 +66,7 @@ public class FabricmoddownloaderClient implements ClientModInitializer {
         });
     }
 
-    public void openDownloadGUI(String kickReason){
+    public static void openDownloadGUI(String kickReason){
         Minecraft.getInstance().gui.setScreen(
                 new DownloadModsScreen(Component.literal(kickReason))
         );
