@@ -42,6 +42,8 @@ dependencies {
     implementation "net.fabricmc:fabric-loader:${project.loader_version}"
     implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     shadow "org.yaml:snakeyaml:2.7"
+    shadow 'com.fasterxml.jackson.core:jackson-databind:2.17.0'
+    shadow 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.22.3'
 }
 
 processResources {
@@ -110,7 +112,9 @@ tasks {
     }
 
     shadowJar {
+        from sourceSets.client.output
         configurations = [project.configurations.shadow]
+        relocate("com.fasterxml.jackson", "me.pintoadmin.fabricmoddownloader.shaded.com.fasterxml.jackson")
         relocate("org.yaml.snakeyaml", "me.pintoadmin.fabricmoddownloader.shaded.org.yaml.snakeyaml")
         archiveClassifier.set("")
     }

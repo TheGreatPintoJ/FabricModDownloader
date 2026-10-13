@@ -7,7 +7,7 @@ import java.util.*;
 import java.util.stream.*;
 
 public class ModManager {
-    public record ModData(String name, List<String> authors, String id, Version version, ModEnvironment environment){}
+    public record ModData(String name, List<String> authors, String id, String version, ModEnvironment environment){}
     private final List<ModData> clientMods = new ArrayList<>();
     private final List<ModData> serverMods = new ArrayList<>();
 
@@ -28,7 +28,7 @@ public class ModManager {
                 List<String> authors = meta.getAuthors().stream().map(Person::getName).collect(Collectors.toList());
                 clientMods.add(
                         new ModData(meta.getName(), authors, meta.getId(),
-                                meta.getVersion(), meta.getEnvironment()));
+                                meta.getVersion().getFriendlyString(), meta.getEnvironment()));
             }
         }
     }
@@ -40,7 +40,7 @@ public class ModManager {
                 List<String> authors = meta.getAuthors().stream().map(Person::getName).collect(Collectors.toList());
                 serverMods.add(
                         new ModData(meta.getName(), authors, meta.getId(),
-                                meta.getVersion(), meta.getEnvironment()));
+                                meta.getVersion().getFriendlyString(), meta.getEnvironment()));
             }
         }
     }

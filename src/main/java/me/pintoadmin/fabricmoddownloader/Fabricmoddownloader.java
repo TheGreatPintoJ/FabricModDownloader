@@ -18,26 +18,12 @@ public class Fabricmoddownloader implements ModInitializer {
     @Override
     public void onInitialize() {
         ServerLifecycleEvents.SERVER_STARTED.register(this::onServerReady);
-        new RequestHandler().init();
     }
 
     private void onServerReady(MinecraftServer server) {
         modManager = new ModManager();
+        new RequestHandler(modManager).initServer();
         configManager = new ConfigManager();
         configManager.loadMods(modManager.getAllMods());
-
-        Collection<ModContainer> modList = FabricLoader.getInstance().getAllMods();
-        int index = 0;
-        for(ModContainer mod : modList){
-            ModMetadata meta = mod.getMetadata();
-            LOGGER.warn("Name: "+meta.getName());
-            LOGGER.warn("Authors: "+meta.getAuthors());
-            LOGGER.warn("ID: "+meta.getId());
-            LOGGER.warn("Version: "+meta.getVersion());
-            LOGGER.warn("Env: "+meta.getEnvironment());
-            LOGGER.warn("-------------------------");
-            index++;
-            if(index > 10) break;
-        }
     }
 }

@@ -36,7 +36,7 @@ public class ConfigManager {
             thisMod.put("id", modData.id());
             thisMod.put("name", modData.name());
             thisMod.put("authors", modData.authors());
-            thisMod.put("version", modData.version().getFriendlyString());
+            thisMod.put("version", modData.version());
             thisMod.put("env", modData.environment().name());
 
             allModsMap.put(modData.id(), thisMod);
