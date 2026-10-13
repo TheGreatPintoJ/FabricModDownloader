@@ -15,16 +15,19 @@ public class ConfigManager {
     private Yaml yaml = new Yaml();
     private Map<String, Object> config = new HashMap<>();
     private Map<String, Object> modsConfig = new HashMap<>();
+    public static List<String> excludedMods = new ArrayList<>();
     public ConfigManager(){
         try {
             Files.createDirectories(dataDir);
             load();
+            loadExclusions();
         } catch (IOException e) {
             LOGGER.error("Could not load yaml: "+e.getMessage());
         }
     }
 
     private void load() throws IOException {
+        saveDefaultResourceToFile(dataDir.resolve("config.yml"), "config.yml");
         config = yaml.load(Files.newInputStream(dataDir.resolve("config.yml")));
         modsConfig = yaml.load(Files.newInputStream(dataDir.resolve("mods.yml")));
     }
@@ -46,6 +49,30 @@ public class ConfigManager {
             yaml.dump(allModsMap, writer);
         } catch (IOException e) {
             LOGGER.error("Could not save yaml: "+e.getMessage());
+        }
+    }
+
+    public void loadExclusions(){
+        try {
+            excludedMods.clear();
+            List<String> excluded = (List<String>) config.get("excluded-mods");
+            excludedMods.addAll(excluded);
+            LOGGER.warn("Loaded exclusions: "+excludedMods.toString());
+        } catch (ClassCastException e){
+            LOGGER.error("Could not load excluded mods: "+e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void saveDefaultResourceToFile(Path file, String path){
+        if (Files.notExists(file)) {
+            try (InputStream in = Fabricmoddownloader.class.getClassLoader().getResourceAsStream(path)) {
+                if (in != null) {
+                    Files.copy(in, file);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

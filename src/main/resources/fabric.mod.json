@@ -20,6 +20,13 @@
       "me.pintoadmin.fabricmoddownloader.Fabricmoddownloader"
     ]
   },
+  "mixins": [
+    "fabricmoddownloader.mixins.json",
+    {
+      "config": "fabricmoddownloader.client.mixins.json",
+      "environment": "client"
+    }
+  ],
   "depends": {
     "fabricloader": ">=${loader_version}",
     "fabric-api": "*",

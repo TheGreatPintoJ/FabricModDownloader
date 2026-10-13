@@ -2,7 +2,6 @@ package me.pintoadmin.fabricmoddownloader;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.*;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.loader.api.*;
 import net.fabricmc.loader.api.metadata.*;
 import net.minecraft.server.*;
@@ -21,9 +20,9 @@ public class Fabricmoddownloader implements ModInitializer {
     }
 
     private void onServerReady(MinecraftServer server) {
+        configManager = new ConfigManager();
         modManager = new ModManager();
         new RequestHandler(modManager).initServer();
-        configManager = new ConfigManager();
         configManager.loadMods(modManager.getAllMods());
     }
 }

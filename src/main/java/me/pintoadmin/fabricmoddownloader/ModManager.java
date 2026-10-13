@@ -6,6 +6,9 @@ import net.fabricmc.loader.api.metadata.*;
 import java.util.*;
 import java.util.stream.*;
 
+import static me.pintoadmin.fabricmoddownloader.ConfigManager.excludedMods;
+import static me.pintoadmin.fabricmoddownloader.Fabricmoddownloader.LOGGER;
+
 public class ModManager {
     public record ModData(String name, List<String> authors, String id, String version, ModEnvironment environment){}
     private final List<ModData> clientMods = new ArrayList<>();
@@ -59,7 +62,8 @@ public class ModManager {
     }
 
     private List<ModContainer> getLoadedMods(){
-        Collection<ModContainer> modList = FabricLoader.getInstance().getAllMods();
+        Collection<ModContainer> modList = FabricLoader.getInstance().getAllMods().stream().filter(c -> c.getContainingMod().isEmpty() && !excludedMods.contains(c.getMetadata().getId())).toList();
+        LOGGER.warn("Got loaded mods. Exclusions: "+excludedMods.toString());
         return new ArrayList<>(modList);
     }
 }

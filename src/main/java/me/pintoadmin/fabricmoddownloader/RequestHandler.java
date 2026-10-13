@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.node.*;
 import com.fasterxml.jackson.datatype.jdk8.*;
 import net.fabricmc.fabric.api.networking.v1.*;
-import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.*;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -13,8 +13,6 @@ import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.*;
 
 import java.util.*;
-
-import static me.pintoadmin.fabricmoddownloader.Fabricmoddownloader.LOGGER;
 
 public class RequestHandler {
     private final ModManager modManager;
@@ -25,7 +23,7 @@ public class RequestHandler {
     public record ModListRequest(String message) implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<@NotNull ModListRequest> TYPE = new CustomPacketPayload.Type<>(
                 Identifier.fromNamespaceAndPath("fabricmoddownloader", "modlist-request"));
-        public static final StreamCodec<@NotNull RegistryFriendlyByteBuf, @NotNull ModListRequest> CODEC =
+        public static final StreamCodec<@NotNull FriendlyByteBuf, @NotNull ModListRequest> CODEC =
                 StreamCodec.composite(ByteBufCodecs.STRING_UTF8, ModListRequest::message, ModListRequest::new);
 
         @Override
@@ -36,7 +34,7 @@ public class RequestHandler {
     public record ModListResponse(String response) implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<@NotNull ModListResponse> TYPE = new CustomPacketPayload.Type<>(
                 Identifier.fromNamespaceAndPath("fabricmoddownloader", "modlist-response"));
-        public static final StreamCodec<@NotNull RegistryFriendlyByteBuf, @NotNull ModListResponse> CODEC =
+        public static final StreamCodec<@NotNull FriendlyByteBuf, @NotNull ModListResponse> CODEC =
                 StreamCodec.composite(ByteBufCodecs.STRING_UTF8, ModListResponse::response, ModListResponse::new);
 
         @Override
@@ -64,7 +62,7 @@ public class RequestHandler {
         });
     }
     public void initClient(){
-        PayloadTypeRegistry.serverboundPlay().register(ModListRequest.TYPE, ModListRequest.CODEC);
-        PayloadTypeRegistry.clientboundPlay().register(ModListResponse.TYPE, ModListResponse.CODEC);
+        PayloadTypeRegistry.serverboundConfiguration().register(ModListRequest.TYPE, ModListRequest.CODEC);
+        PayloadTypeRegistry.clientboundConfiguration().register(ModListResponse.TYPE, ModListResponse.CODEC);
     }
 }
