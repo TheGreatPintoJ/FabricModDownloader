@@ -1,43 +1,43 @@
 package me.pintoadmin.fabricmoddownloader.client;
 
+import net.minecraft.client.*;
 import net.minecraft.client.gui.*;
 import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.components.toasts.*;
 import net.minecraft.client.gui.screens.*;
 import net.minecraft.network.chat.*;
 
+import java.util.*;
+
 public class DownloadModsScreen extends Screen {
     private final Screen parent;
+    private final int WIDTH;
+    private final int HEIGHT;
     public DownloadModsScreen(Component title, Screen parent) {
         super(title);
         this.parent = parent;
+        WIDTH = Minecraft.getInstance().getWindow().getScreenWidth();
+        HEIGHT = Minecraft.getInstance().getWindow().getScreenHeight();
     }
 
     @Override
     protected void init() {
-        Button buttonWidget = Button.builder(Component.literal("Hello World"), (btn) -> {
-            // When the button is clicked, we can display a toast to the screen.
-            this.minecraft.gui.toastManager().addToast(
-                    new SystemToast(SystemToast.SystemToastId.NARRATOR_TOGGLE, Component.nullToEmpty("Hello World!"), Component.nullToEmpty("This is a toast."))
-            );
-        }).bounds(40, 40, 120, 20).build();
-        // x, y, width, height
-        // It's recommended to use the fixed height of 20 to prevent rendering issues with the button
-        // textures.
+        Button downloadButton = Button.builder(Component.literal("Download"), btn -> {
 
-        // Register the button widget.
-        this.addRenderableWidget(buttonWidget);
+        }).bounds(WIDTH/2, 80, 75, 20).build();
+
+        Button searchButton = Button.builder(Component.literal("Search for missing mod"), btn -> {
+            this.addRenderableWidget(downloadButton);
+        }).bounds(WIDTH/2, 40, 100, 20).build();
+
+        this.addRenderableWidget(searchButton);
     }
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
         super.extractRenderState(graphics, mouseX, mouseY, delta);
 
-        // Minecraft doesn't have a "label" widget, so we'll have to draw our own text.
-        // We'll subtract the font height from the Y position to make the text appear above the button.
-        // Subtracting an extra 10 pixels will give the text some padding.
-        // font, text, x, y, color, hasShadow
-        graphics.text(this.font, "Special Button", 40, 40 - this.font.lineHeight - 10, 0xFFFFFFFF, true);
+        graphics.text(this.font, "Download Missing Mods", WIDTH / 2, 40 - this.font.lineHeight - 10, 0xFFFFFFFF, true);
     }
 
     @Override

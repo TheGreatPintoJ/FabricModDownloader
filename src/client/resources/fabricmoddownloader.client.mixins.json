@@ -4,7 +4,7 @@
   "package": "me.pintoadmin.fabricmoddownloader.client.mixin",
   "compatibilityLevel": "JAVA_25",
   "client": [
-    "MixinConnection"
+    "MixinDisconnectScreen"
   ],
   "injectors": {
     "defaultRequire": 1
