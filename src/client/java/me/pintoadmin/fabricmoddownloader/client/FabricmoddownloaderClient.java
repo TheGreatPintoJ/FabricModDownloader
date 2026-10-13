@@ -32,8 +32,8 @@ public class FabricmoddownloaderClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        modManager = ModManager.getInstance();
         configManager = ConfigManager.getInstance();
+        modManager = ModManager.getInstance();
         RequestHandler requestHandler = new RequestHandler(modManager);
         requestHandler.initClient();
 

@@ -14,7 +14,7 @@ public class ConfigManager {
     private static volatile ConfigManager instance;
     public static Path dataDir = FabricLoader.getInstance().getConfigDir().resolve("fabricmoddownloader");
     public static Path modsDir = FabricLoader.getInstance().getGameDir().resolve("mods");
-    private Yaml yaml = new Yaml();
+    private final Yaml yaml = new Yaml();
     private Map<String, Object> config = new HashMap<>();
     private Map<String, Object> modsConfig = new HashMap<>();
     public static List<String> excludedMods = new ArrayList<>();
@@ -23,21 +23,27 @@ public class ConfigManager {
             Files.createDirectories(dataDir);
             if(FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER){
                 saveDefaultResourceToFile(dataDir.resolve("config.yml"), "server-config.yml");
-                load();
+                loadServer();
                 loadExclusions();
-            }
-            if(FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT){
+            } else if(FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT){
                 saveDefaultResourceToFile(dataDir.resolve("config.yml"), "client-config.yml");
-                load();
-                modsDir = FabricLoader.getInstance().getGameDir().resolve((String) config.getOrDefault("mods-directory", "mods"));
+                loadClient();
+                modsDir = FabricLoader.getInstance().getGameDir()
+                        .resolve((String) config.get("mods-directory"));
+                LOGGER.warn("Loaded mods dir: "+modsDir.toAbsolutePath());
             }
         } catch (IOException e) {
             LOGGER.error("Could not load yaml: "+e.getMessage());
         }
     }
 
-    private void load() throws IOException {
+    private void loadClient() throws IOException {
         config = yaml.load(Files.newInputStream(dataDir.resolve("config.yml")));
+        LOGGER.warn("Loaded yaml: "+config);
+    }
+    private void loadServer() throws IOException {
+        config = yaml.load(Files.newInputStream(dataDir.resolve("config.yml")));
+        LOGGER.warn("Loaded yaml: "+config);
         modsConfig = yaml.load(Files.newInputStream(dataDir.resolve("mods.yml")));
     }
 
