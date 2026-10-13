@@ -9,6 +9,7 @@ import me.pintoadmin.fabricmoddownloader.*;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.*;
 import net.minecraft.client.*;
+import net.minecraft.client.gui.*;
 import net.minecraft.client.renderer.feature.*;
 import net.minecraft.network.*;
 import net.minecraft.network.chat.*;
@@ -68,7 +69,7 @@ public class FabricmoddownloaderClient implements ClientModInitializer {
 
     public static void openDownloadGUI(String kickReason){
         Minecraft.getInstance().gui.setScreen(
-                new DownloadModsScreen(Component.literal(kickReason))
+                new DownloadModsScreen(Component.literal(kickReason), Minecraft.getInstance().gui.screen())
         );
     }
 }

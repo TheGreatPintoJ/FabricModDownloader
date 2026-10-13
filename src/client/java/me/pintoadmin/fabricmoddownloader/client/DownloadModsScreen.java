@@ -7,8 +7,10 @@ import net.minecraft.client.gui.screens.*;
 import net.minecraft.network.chat.*;
 
 public class DownloadModsScreen extends Screen {
-    public DownloadModsScreen(Component title) {
+    private final Screen parent;
+    public DownloadModsScreen(Component title, Screen parent) {
         super(title);
+        this.parent = parent;
     }
 
     @Override
@@ -25,7 +27,6 @@ public class DownloadModsScreen extends Screen {
 
         // Register the button widget.
         this.addRenderableWidget(buttonWidget);
-
     }
 
     @Override
@@ -37,5 +38,10 @@ public class DownloadModsScreen extends Screen {
         // Subtracting an extra 10 pixels will give the text some padding.
         // font, text, x, y, color, hasShadow
         graphics.text(this.font, "Special Button", 40, 40 - this.font.lineHeight - 10, 0xFFFFFFFF, true);
+    }
+
+    @Override
+    public void onClose(){
+        this.minecraft.gui.setScreen(this.parent);
     }
 }
