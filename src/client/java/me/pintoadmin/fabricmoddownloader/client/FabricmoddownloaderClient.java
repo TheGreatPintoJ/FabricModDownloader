@@ -28,10 +28,12 @@ public class FabricmoddownloaderClient implements ClientModInitializer {
     private final List<ModManager.ModData> missingMods = new ArrayList<>();
     private final List<String> missingModsNamespaces = new ArrayList<>();
     private ModManager modManager;
+    private ConfigManager configManager;
 
     @Override
     public void onInitializeClient() {
         modManager = ModManager.getInstance();
+        configManager = ConfigManager.getInstance();
         RequestHandler requestHandler = new RequestHandler(modManager);
         requestHandler.initClient();
 

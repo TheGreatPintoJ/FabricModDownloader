@@ -1,7 +1,7 @@
 package me.pintoadmin.fabricmoddownloader;
 
+import net.fabricmc.api.*;
 import net.fabricmc.loader.api.*;
-import net.fabricmc.loader.api.metadata.*;
 import org.yaml.snakeyaml.*;
 
 import java.io.*;
@@ -11,7 +11,9 @@ import java.util.*;
 import static me.pintoadmin.fabricmoddownloader.Fabricmoddownloader.LOGGER;
 
 public class ConfigManager {
-    private Path dataDir = FabricLoader.getInstance().getConfigDir().resolve("fabricmoddownloader");
+    private static volatile ConfigManager instance;
+    public static Path dataDir = FabricLoader.getInstance().getConfigDir().resolve("fabricmoddownloader");
+    public static Path modsDir = FabricLoader.getInstance().getGameDir().resolve("mods");
     private Yaml yaml = new Yaml();
     private Map<String, Object> config = new HashMap<>();
     private Map<String, Object> modsConfig = new HashMap<>();
@@ -19,15 +21,22 @@ public class ConfigManager {
     public ConfigManager(){
         try {
             Files.createDirectories(dataDir);
-            load();
-            loadExclusions();
+            if(FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER){
+                saveDefaultResourceToFile(dataDir.resolve("config.yml"), "server-config.yml");
+                load();
+                loadExclusions();
+            }
+            if(FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT){
+                saveDefaultResourceToFile(dataDir.resolve("config.yml"), "client-config.yml");
+                load();
+                modsDir = FabricLoader.getInstance().getGameDir().resolve((String) config.getOrDefault("mods-directory", "mods"));
+            }
         } catch (IOException e) {
             LOGGER.error("Could not load yaml: "+e.getMessage());
         }
     }
 
     private void load() throws IOException {
-        saveDefaultResourceToFile(dataDir.resolve("config.yml"), "config.yml");
         config = yaml.load(Files.newInputStream(dataDir.resolve("config.yml")));
         modsConfig = yaml.load(Files.newInputStream(dataDir.resolve("mods.yml")));
     }
@@ -74,5 +83,16 @@ public class ConfigManager {
                 e.printStackTrace();
             }
         }
+    }
+
+    public static ConfigManager getInstance(){
+        if (instance == null) { // First check (no logging/locking overhead)
+            synchronized (ConfigManager.class) {
+                if (instance == null) { // Second check (inside synchronization)
+                    instance = new ConfigManager();
+                }
+            }
+        }
+        return instance;
     }
 }

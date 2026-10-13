@@ -7,12 +7,15 @@ import com.google.gson.*;
 import net.fabricmc.loader.api.*;
 import net.fabricmc.loader.api.metadata.*;
 
+import java.io.*;
 import java.net.*;
 import java.net.http.*;
+import java.nio.file.*;
 import java.util.*;
 import java.util.stream.*;
 
 import static me.pintoadmin.fabricmoddownloader.ConfigManager.excludedMods;
+import static me.pintoadmin.fabricmoddownloader.ConfigManager.modsDir;
 import static me.pintoadmin.fabricmoddownloader.Fabricmoddownloader.LOGGER;
 
 public class ModManager {
@@ -21,6 +24,7 @@ public class ModManager {
     public record ModData(String name, List<String> authors, String id, String version, ModEnvironment environment){}
     private final List<ModData> clientMods = new ArrayList<>();
     private final List<ModData> serverMods = new ArrayList<>();
+    private final Map<String, String> foundMods = new HashMap<>(); // Namespace to ID
 
     private ModManager(){
         init();
@@ -57,6 +61,7 @@ public class ModManager {
     }
 
     public String findMod(String namespace){
+        if(foundMods.containsKey(namespace)) return foundMods.get(namespace);
         try {
             HttpClient client = HttpClient.newHttpClient();
             HttpRequest request = HttpRequest.newBuilder()
@@ -66,14 +71,19 @@ public class ModManager {
 
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-            if(response.statusCode() != 200) return findMod(namespace.replace("_", "-"));
+            String foundID;
+            if(response.statusCode() != 200){
+                foundID = findMod(namespace.replace("_", "-"));
+            } else {
+                JsonMapper mapper = new JsonMapper();
+                JsonNode json = mapper.readTree(response.body());
+                int total_hits = json.get("total_hits").asInt();
 
-            JsonMapper mapper = new JsonMapper();
-            JsonNode json = mapper.readTree(response.body());
-            int total_hits = json.get("total_hits").asInt();
-
-            if(total_hits == 0) return findMod(namespace.replace("_", "-"));
-            else return json.get("hits").get(0).get("project_id").asText();
+                if (total_hits == 0) foundID = findMod(namespace.replace("_", "-"));
+                else foundID = json.get("hits").get(0).get("project_id").asText();
+            }
+            foundMods.put(namespace, foundID);
+            return foundID;
         } catch (Exception e) {
             e.printStackTrace();
             return "";
@@ -114,7 +124,70 @@ public class ModManager {
     }
 
     public boolean downloadMod(String id){
-        return false;
+        try {
+            // Get project details
+            HttpClient client = HttpClient.newHttpClient();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("https://api.modrinth.com/v2/project/"+id+"/version"))
+                    .setHeader("User-Agent", "TheGreatPintoJ/fabricmoddownloader/1.0")
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if(response.statusCode() == 200) {
+                JsonMapper mapper = new JsonMapper();
+                JsonNode json = mapper.readTree(response.body());
+
+                System.out.println("Response: "+response);
+
+                String clientGameVersion = FabricLoader.getInstance()
+                        .getModContainer("minecraft")
+                        .get()
+                        .getMetadata()
+                        .getVersion()
+                        .getFriendlyString();
+
+                List<JsonNode> validVersions;
+                if(json != null && json.isArray()){
+                    validVersions = StreamSupport.stream(json.spliterator(), false)
+                            .filter(j ->
+                                    mapper.convertValue(j.get("game_versions"), new TypeReference<List<String>>(){})
+                                    .getFirst().equalsIgnoreCase(clientGameVersion))
+                            .toList();
+                    if(validVersions.isEmpty()) {
+                        System.err.println("No valid mod version for game version "+clientGameVersion);
+                        return false;
+                    }
+                    JsonNode version = mapper.convertValue(validVersions.getFirst().get("files"), new TypeReference<List<JsonNode>>(){}).getFirst();
+                    System.out.println("Valid Version: "+version);
+                    String filename = version.get("filename").asText();
+                    HttpRequest fileRequest = HttpRequest.newBuilder()
+                            .uri(URI.create(version.get("url").asText()))
+                            .setHeader("User-Agent", "TheGreatPintoJ/fabricmoddownloader/1.0")
+                            .build();
+
+                    HttpResponse<InputStream> fileResponse = client.send(fileRequest, HttpResponse.BodyHandlers.ofInputStream());
+                    System.out.println("Response: "+fileResponse);
+
+                    if(fileResponse.statusCode() == 200){
+                        try (InputStream inputStream = fileResponse.body()) {
+                            Files.copy(inputStream, modsDir.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
+                            System.out.println("Download complete! Saved as " + filename);
+                            return true;
+                        } catch (Exception e){
+                            e.printStackTrace();
+                        }
+                    } else {
+                        System.err.println("Failed to download file. HTTP Code: " + fileResponse.statusCode());
+                        return false;
+                    }
+                } else System.err.println("Versions response null or not array");
+            }
+            return false;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public List<ModData> getClientModlist(){
