@@ -5,13 +5,16 @@ import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.*;
 import com.mojang.authlib.minecraft.client.*;
+import com.mojang.brigadier.context.*;
 import me.pintoadmin.fabricmoddownloader.*;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.command.v2.*;
 import net.fabricmc.fabric.api.client.networking.v1.*;
 import net.fabricmc.fabric.api.resource.v1.reloader.*;
 import net.minecraft.client.*;
 import net.minecraft.client.gui.*;
 import net.minecraft.client.renderer.feature.*;
+import net.minecraft.commands.*;
 import net.minecraft.network.*;
 import net.minecraft.network.chat.*;
 import net.minecraft.network.chat.Component;
@@ -37,7 +40,7 @@ public class FabricmoddownloaderClient implements ClientModInitializer {
         RequestHandler requestHandler = new RequestHandler(modManager);
         requestHandler.initClient();
 
-        ClientConfigurationNetworking.registerGlobalReceiver(RequestHandler.ModListResponse.TYPE, (payload, context) -> {
+        ClientPlayNetworking.registerGlobalReceiver(RequestHandler.ModListResponse.TYPE, (payload, context) -> {
             String feedbackMessage = payload.response();
 
             ObjectMapper jsonMapper = new ObjectMapper();
@@ -49,6 +52,7 @@ public class FabricmoddownloaderClient implements ClientModInitializer {
                 diffMods.addAll(object);
                 diffMods.removeIf(clientMods::contains);
 
+                if(diffMods.isEmpty()) return;
 
                 LOGGER.warn("------ MISSING MODS ------");
                 for(ModManager.ModData mod : diffMods){
@@ -61,22 +65,47 @@ public class FabricmoddownloaderClient implements ClientModInitializer {
                 }
                 missingMods.clear();
                 missingMods.addAll(diffMods);
+                missingModsNamespaces.addAll(diffMods.stream().map(ModManager.ModData::id).toList());
 
+                context.client().player.sendSystemMessage(Component.literal("This server has mods that can be installed clientside.").withColor(TextColor.GOLD));
+                context.client().gui.hud.getChat().addClientSystemMessage(Component.literal("Click Here").setStyle(
+                        Style.EMPTY.withClickEvent(new ClickEvent.RunCommand("/downloadmods"))
+                                .withColor(TextColor.GREEN)
+                                .withUnderlined(true)
+                                .withBold(true))
+                        .append(Component.literal(" to download them")
+                                .withColor(TextColor.GOLD)));
             } catch (JsonProcessingException e) {
                 throw new RuntimeException(e);
             }
         });
 
-        ClientConfigurationConnectionEvents.INIT.register((_, _) -> {
+        ClientPlayConnectionEvents.JOIN.register((_, _, _) -> {
             if (ClientPlayNetworking.canSend(RequestHandler.ModListRequest.TYPE)) {
-                ClientPlayNetworking.send(new RequestHandler.ModListRequest("gimme"));
+                RequestHandler.ModListRequest request = new RequestHandler.ModListRequest("");
+                ClientPlayNetworking.send(request);
             }
+        });
+
+        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
+            dispatcher.register(ClientCommands.literal("downloadmods").executes(this::downloadModsCommand));
         });
     }
 
-    public void openDownloadGUI(String kickReason){
+    private int downloadModsCommand(CommandContext<FabricClientCommandSource> context){
+        Minecraft client = context.getSource().getClient();
+        client.execute(this::openOptionalGUI);
+        return 1;
+    }
+
+    public void openDownloadGUI(){
         Minecraft.getInstance().gui.setScreen(
-                new DownloadModsScreen(Component.literal(kickReason), Minecraft.getInstance().gui.screen())
+                new DownloadModsScreen(Component.literal(""), Minecraft.getInstance().gui.screen())
+        );
+    }
+    public void openOptionalGUI(){
+        Minecraft.getInstance().gui.setScreen(
+                new OptionalModsScreen(missingMods)
         );
     }
 

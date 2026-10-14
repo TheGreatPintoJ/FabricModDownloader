@@ -19,7 +19,7 @@ public class MixinDisconnectScreen {
 
         if (message.contains("registry") || message.contains("mismatched mod") || message.contains("unknown to this client")) {
             FabricmoddownloaderClient.getInstance().parseReason(message);
-            FabricmoddownloaderClient.getInstance().openDownloadGUI(message);
+            FabricmoddownloaderClient.getInstance().openDownloadGUI();
         }
     }
 }

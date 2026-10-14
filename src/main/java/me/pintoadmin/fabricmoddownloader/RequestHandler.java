@@ -62,7 +62,7 @@ public class RequestHandler {
         });
     }
     public void initClient(){
-        PayloadTypeRegistry.serverboundConfiguration().register(ModListRequest.TYPE, ModListRequest.CODEC);
-        PayloadTypeRegistry.clientboundConfiguration().register(ModListResponse.TYPE, ModListResponse.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(ModListRequest.TYPE, ModListRequest.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(ModListResponse.TYPE, ModListResponse.CODEC);
     }
 }

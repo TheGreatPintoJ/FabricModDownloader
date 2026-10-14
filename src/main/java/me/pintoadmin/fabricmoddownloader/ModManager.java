@@ -3,7 +3,6 @@ package me.pintoadmin.fabricmoddownloader;
 import com.fasterxml.jackson.core.type.*;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.json.*;
-import com.google.gson.*;
 import net.fabricmc.loader.api.*;
 import net.fabricmc.loader.api.metadata.*;
 
@@ -65,29 +64,71 @@ public class ModManager {
         try {
             HttpClient client = HttpClient.newHttpClient();
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("https://api.modrinth.com/v2/search?query="+namespace))
+                    .uri(URI.create("https://api.modrinth.com/v2/project/"+namespace+"/check"))
                     .setHeader("User-Agent", "TheGreatPintoJ/fabricmoddownloader/1.0")
                     .build();
 
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-            String foundID;
+            String foundID = "";
             if(response.statusCode() != 200){
-                foundID = findMod(namespace.replace("_", "-"));
+                if(namespace.contains("_"))
+                    foundID = findMod(namespace.replace("_", "-"));
             } else {
                 JsonMapper mapper = new JsonMapper();
                 JsonNode json = mapper.readTree(response.body());
-                int total_hits = json.get("total_hits").asInt();
-
-                if (total_hits == 0) foundID = findMod(namespace.replace("_", "-"));
-                else foundID = json.get("hits").get(0).get("project_id").asText();
+                foundID = json.get("id").asText();
             }
-            foundMods.put(namespace, foundID);
+            if(foundID.isBlank()) LOGGER.warn("Could not find mod by id: "+namespace);
+            else {
+                LOGGER.warn("Found mod by id: "+namespace);
+                foundMods.put(namespace, foundID);
+            }
             return foundID;
         } catch (Exception e) {
             e.printStackTrace();
             return "";
         }
+    }
+    public String findModByName(String name){
+        if(foundMods.containsKey(name)) return foundMods.get(name);
+        try {
+            HttpClient client = HttpClient.newHttpClient();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("https://api.modrinth.com/v2/search?query="+urlEncode(name)))
+                    .setHeader("User-Agent", "TheGreatPintoJ/fabricmoddownloader/1.0")
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            String foundID = "";
+            if(response.statusCode() != 200){
+                if(name.contains("_"))
+                    foundID = findMod(name.replace("_", "-"));
+            } else {
+                JsonMapper mapper = new JsonMapper();
+                JsonNode json = mapper.readTree(response.body());
+                int total_hits = json.get("total_hits").asInt();
+
+                if (total_hits == 0 && name.contains("_")) foundID = findMod(name.replace("_", "-"));
+                else if(total_hits > 0) foundID = json.get("hits").get(0).get("project_id").asText();
+            }
+            if(foundID.isBlank()) LOGGER.warn("Could not find mod by name: "+name);
+            else {
+                LOGGER.warn("Found mod by name: "+name);
+                foundMods.put(name, foundID);
+            }
+            return foundID;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
+    public String findMod(ModData modData){
+        String id = findMod(modData.id);
+        if(!id.isBlank()) return id;
+        else id = findModByName(modData.name);
+        return id;
     }
 
     public ModData getModData(String id){
@@ -138,7 +179,7 @@ public class ModManager {
                 JsonMapper mapper = new JsonMapper();
                 JsonNode json = mapper.readTree(response.body());
 
-                System.out.println("Response: "+response);
+                LOGGER.warn("Response: "+response);
 
                 String clientGameVersion = FabricLoader.getInstance()
                         .getModContainer("minecraft")
@@ -152,7 +193,9 @@ public class ModManager {
                     validVersions = StreamSupport.stream(json.spliterator(), false)
                             .filter(j ->
                                     mapper.convertValue(j.get("game_versions"), new TypeReference<List<String>>(){})
-                                    .getFirst().equalsIgnoreCase(clientGameVersion))
+                                    .getFirst().equalsIgnoreCase(clientGameVersion)
+                                            && mapper.convertValue(j.get("loaders"), new TypeReference<List<String>>(){})
+                                            .getFirst().equalsIgnoreCase("fabric"))
                             .toList();
                     if(validVersions.isEmpty()) {
                         System.err.println("No valid mod version for game version "+clientGameVersion);
@@ -207,6 +250,12 @@ public class ModManager {
         Collection<ModContainer> modList = FabricLoader.getInstance().getAllMods().stream().filter(c -> c.getContainingMod().isEmpty() && !excludedMods.contains(c.getMetadata().getId())).toList();
         LOGGER.warn("Got loaded mods. Exclusions: "+excludedMods.toString());
         return new ArrayList<>(modList);
+    }
+
+    private String urlEncode(String input){
+        return input.replace(" ", "%20")
+                .replace("/", "%2F")
+                .replace("'", "%27");
     }
 
     public static ModManager getInstance(){
