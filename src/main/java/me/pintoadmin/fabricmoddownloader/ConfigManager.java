@@ -28,8 +28,9 @@ public class ConfigManager {
             } else if(FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT){
                 saveDefaultResourceToFile(dataDir.resolve("config.yml"), "client-config.yml");
                 loadClient();
-                modsDir = FabricLoader.getInstance().getGameDir()
-                        .resolve((String) config.getOrDefault("mods-directory", "mods"));
+                if(config != null && !config.isEmpty())
+                    modsDir = FabricLoader.getInstance().getGameDir()
+                            .resolve((String) config.getOrDefault("mods-directory", "mods"));
                 LOGGER.warn("Loaded mods dir: "+modsDir.toAbsolutePath());
             }
         } catch (IOException e) {
