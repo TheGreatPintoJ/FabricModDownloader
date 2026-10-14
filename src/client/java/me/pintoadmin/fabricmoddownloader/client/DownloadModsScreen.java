@@ -61,7 +61,7 @@ public class DownloadModsScreen extends Screen {
 
         Button rawErrorButton = Button.builder(Component.literal("View disconnect error"), btn -> {
             this.minecraft.gui.setScreen(disconnectScreen);
-        }).bounds(this.width-185, this.height-30, 175, 20).build();
+        }).bounds(this.width-150, this.height-30, 135, 20).build();
         this.addRenderableWidget(rawErrorButton);
 
         Button backButton = Button.builder(Component.literal("Back"), btn -> {
