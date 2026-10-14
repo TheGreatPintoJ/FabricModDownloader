@@ -39,11 +39,9 @@ public class ConfigManager {
 
     private void loadClient() throws IOException {
         config = yaml.load(Files.newInputStream(dataDir.resolve("config.yml")));
-        LOGGER.warn("Loaded yaml: "+config);
     }
     private void loadServer() throws IOException {
         config = yaml.load(Files.newInputStream(dataDir.resolve("config.yml")));
-        LOGGER.warn("Loaded yaml: "+config);
         modsConfig = yaml.load(Files.newInputStream(dataDir.resolve("mods.yml")));
     }
 

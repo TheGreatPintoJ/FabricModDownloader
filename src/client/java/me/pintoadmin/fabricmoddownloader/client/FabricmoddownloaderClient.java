@@ -87,6 +87,7 @@ public class FabricmoddownloaderClient implements ClientModInitializer {
         || s.startsWith("the following registry")
         || s.isBlank());
 
+        missingModsNamespaces.clear();
         missingModsNamespaces.addAll(reasons);
     }
 
