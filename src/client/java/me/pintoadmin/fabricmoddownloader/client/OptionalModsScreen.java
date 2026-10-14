@@ -41,7 +41,7 @@ public class OptionalModsScreen extends Screen {
             String modID = modManager.findMod(data);
             if(modID.isBlank()){
                 LOGGER.warn("Could not find mod on modrinth: "+data.id());
-                newFailedEntry(modID, startingY+=spacing);
+                newFailedEntry(data.id(), startingY+=spacing);
                 continue;
             }
             ModManager.ModData mod = modManager.getModData(modID);

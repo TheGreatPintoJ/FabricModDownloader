@@ -50,7 +50,7 @@ public class DownloadModsScreen extends Screen {
                 String modID = modManager.findMod(namespace);
                 if(modID.isBlank()){
                     LOGGER.warn("Could not find mod on modrinth: "+namespace);
-                    newFailedEntry(modID, startingY+=spacing);
+                    newFailedEntry(namespace, startingY+=spacing);
                     continue;
                 }
                 ModManager.ModData mod = modManager.getModData(modID);
