@@ -32,4 +32,12 @@ mods-directory: "custom_mods"
 ```
 The directory within the game folder that any downloaded mods will be saved to. If absent or commented out, `"mods"` will be used.
 
-## Gallery
+<h2>
+<details>
+<summary>Images</summary>
+
+![add-required-screen.png](imgs/add-required-screen.png)
+![add-optionals-screen.png](imgs/add-optionals-screen.png)
+![add-optionals-prompt.png](imgs/add-optionals-prompt.png)
+</details>
+</h2>
